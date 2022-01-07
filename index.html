@@ -238,27 +238,74 @@
 
             // RAW文件讀取
             elements[0].addEventListener('change', (evt) => {
+                let fr = new FileReader()
 
+                let files = evt.target.files
+                if (files.length <= 0) {
+                    return
+                }
+
+                let file = evt.target.files[0];
+
+                let filename = file.name
+
+                filename = filename.split('.')
+                let values = filename[0].split('_')
+
+                let width = values[1]
+                let height = values[2]
+                let depth = values[3]
+                let byte = values[4]
+                let max = Math.max(width, height, depth)                
+                let paddingData = null
+
+                fr.onload = () => {
+                    let result = fr.result
+                    if (byte = 'uint8'){
+                        let data = new Uint8Array(result);
+                        console.log(data);
+                        paddingData = new Uint8Array(max* max * max);
+
+                        modelView.databuffer = new Uint8Array(result);
+                        modelView.size = max;
+                        modelView.threshold = 75;
+                        modelView.updateModel()
+                    }
+                }
+
+                fr.readAsArrayBuffer(file)
             })
 
             // 模型資料下載
             elements[1].addEventListener('click', (evt) => {
+                let exporters = new STLExporter()
+                let mesh = modelView.download()
 
+                let result = exporters.parse(mesh, {binary:true})
+                let blob = new Blob([result], {type:'application/octet-stream'})
+
+                let dLink = document.createElement('a')
+                dLink.href = URL.createObjectURL(blob)
+                dLink.download = 'model.stl'
+
+                dLink.click()
             })
 
             // 閥值設定
             elements[2].addEventListener('click', (evt) => {
-
+                let isovalue = evt.srcElement.value
+                modelView.threshold = isovalue
+                modelView.updateModel()
             })
 
             // 紋理設置
             elements[3].addEventListener('change', (evt) => {
-
+                let selectedTextureIndex = evt.srcElement.value
             })
 
             // 模型網格顯示
             elements[4].addEventListener('change', (evt) => {
-
+                
             })
         }
 
